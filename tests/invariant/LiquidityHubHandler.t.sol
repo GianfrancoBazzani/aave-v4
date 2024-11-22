@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import 'forge-std/Test.sol';
 
 import 'src/contracts/LiquidityHub.sol';
-import 'src/contracts/BorrowModule.sol';
+import 'src/contracts/Spoke.sol';
 import 'src/dependencies/openzeppelin/IERC20.sol';
 import '../mocks/MockPriceOracle.sol';
 import '../mocks/MockERC20.sol';
@@ -18,7 +18,7 @@ contract LiquidityHubHandler is Test {
 
   IPriceOracle public oracle;
   LiquidityHub public hub;
-  BorrowModule public bm;
+  Spoke public bm;
   DefaultReserveInterestRateStrategy creditLineIRStrategy;
 
   address internal mockAddressesProvider = makeAddr('mockAddressesProvider');
@@ -35,27 +35,20 @@ contract LiquidityHubHandler is Test {
   constructor() {
     creditLineIRStrategy = new DefaultReserveInterestRateStrategy(mockAddressesProvider);
     oracle = new MockPriceOracle();
-    hub = new LiquidityHub(address(oracle));
-    bm = new BorrowModule(address(hub), address(creditLineIRStrategy));
+    hub = new LiquidityHub();
+    bm = new Spoke(address(hub));
     usdc = new MockERC20();
     dai = new MockERC20();
     usdt = new MockERC20();
 
     // Add dai
-    hub.addReserve(
-      LiquidityHub.ReserveConfig({
-        borrowModule: address(bm),
-        decimals: 18,
-        active: true,
-        supplyCap: type(uint256).max,
-        drawCap: type(uint256).max,
-        liquidityPremium: 0
-      }),
+    hub.addAsset(
+      DataTypes.AssetConfig({decimals: 18, active: true, irStrategy: address(0)}),
       address(dai)
     );
     bm.addReserve(
       0,
-      BorrowModule.ReserveConfig({lt: 0, lb: 0, rf: 0, borrowable: false}),
+      Spoke.ReserveConfig({lt: 0, lb: 0, borrowable: false, collateral: false}),
       address(dai)
     );
   }
@@ -79,10 +72,10 @@ contract LiquidityHubHandler is Test {
   function supply(uint256 assetId, address user, uint256 amount, address onBehalfOf) public {
     if (user == address(hub) || user == address(0)) return;
     if (onBehalfOf == address(0)) return;
-    assetId = bound(assetId, 0, hub.reserveCount() - 1);
+    assetId = bound(assetId, 0, hub.assetCount() - 1);
     amount = bound(amount, 1, type(uint128).max);
 
-    address asset = hub.reservesList(assetId);
+    address asset = hub.assetsList(assetId);
     deal(asset, user, amount);
     Utils.supply(vm, hub, assetId, user, amount, onBehalfOf);
 
@@ -92,8 +85,9 @@ contract LiquidityHubHandler is Test {
   }
 
   function withdraw(uint256 assetId, address user, uint256 amount, address to) public {
-    assetId = bound(assetId, 0, hub.reserveCount() - 1);
-    amount = bound(amount, 1, hub.getUserBalance(assetId, user));
+    assetId = bound(assetId, 0, hub.assetCount() - 1);
+    // TODO: bound by bm user balance
+    amount = bound(amount, 1, 2);
 
     Utils.withdraw(vm, hub, assetId, user, amount, to);
 
@@ -104,10 +98,10 @@ contract LiquidityHubHandler is Test {
 
   function donate(uint256 assetId, address user, uint256 amount) public {
     if (user == address(hub) || user == address(0)) return;
-    assetId = bound(assetId, 0, hub.reserveCount() - 1);
+    assetId = bound(assetId, 0, hub.assetCount() - 1);
     amount = bound(amount, 1, type(uint128).max);
 
-    address asset = hub.reservesList(assetId);
+    address asset = hub.assetsList(assetId);
 
     deal(asset, user, amount);
     vm.prank(user);
@@ -117,7 +111,7 @@ contract LiquidityHubHandler is Test {
   }
 
   function _updateState(uint256 assetId) internal {
-    LiquidityHub.Reserve memory reserveData = hub.getReserve(assetId);
+    LiquidityHub.Asset memory reserveData = hub.getAsset(assetId);
     s.lastExchangeRate[assetId] = reserveData.totalShares == 0
       ? 0
       : reserveData.totalAssets / reserveData.totalShares;
