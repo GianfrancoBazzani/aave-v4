@@ -18,7 +18,7 @@ export const MAX_RP = 1000_00n;
 export const MIN_INDEX = parseRay(1.01); // 1% interest
 export const MAX_INDEX = parseRay(1.99); // 99% interest
 
-export const PRECISION = 3n; // max abs delta allowed
+export const PRECISION = 3000n; // max abs delta allowed
 
 export function logBaseAndPremiumDebt(who: User | Spoke | LiquidityHub) {
   const hub = who instanceof LiquidityHub ? who : who.hub;
