@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {PercentageMathExtended} from 'src/contracts/PercentageMathExtended.sol';
+import {PercentageMathExtended} from 'src/libraries/math/PercentageMathExtended.sol';
 
 contract PercentageMathExtendedWrapper {
   function PERCENTAGE_FACTOR() public pure returns (uint256) {

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {WadRayMath} from 'src/contracts/WadRayMath.sol';
-import {WadRayMathExtended} from 'src/contracts/WadRayMathExtended.sol';
+import {WadRayMath} from 'src/libraries/math/WadRayMath.sol';
+import {WadRayMathExtended} from 'src/libraries/math/WadRayMathExtended.sol';
 
 contract WadRayMathExtendedWrapper {
   function WAD() public pure returns (uint256) {
