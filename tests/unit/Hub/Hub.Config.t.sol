@@ -23,6 +23,11 @@ contract HubConfigTest is HubBase {
     );
   }
 
+  function test_hub_deploy_revertsWith_InvalidAddress() public {
+    vm.expectRevert(IHub.InvalidAddress.selector);
+    new Hub(address(0));
+  }
+
   function test_addSpoke_fuzz_revertsWith_AssetNotListed(
     uint256 assetId,
     DataTypes.SpokeConfig calldata spokeConfig
@@ -263,6 +268,7 @@ contract HubConfigTest is HubBase {
       encodedIrData
     );
 
+    assertBorrowRateSynced(hub1, assetId, 'addAsset');
     assertEq(assetId, expectedAssetId, 'asset id');
     assertEq(hub1.getAssetCount(), assetId + 1, 'asset count');
     assertEq(hub1.getAsset(assetId).decimals, decimals, 'asset decimals');
@@ -380,6 +386,7 @@ contract HubConfigTest is HubBase {
     Utils.updateAssetConfig(hub1, ADMIN, assetId, newConfig);
 
     assertEq(hub1.getAssetConfig(assetId), newConfig);
+    assertBorrowRateSynced(hub1, assetId, 'updateAssetConfig');
   }
 
   function test_updateAssetConfig_fuzz_Scenario(uint256 assetId) public {
