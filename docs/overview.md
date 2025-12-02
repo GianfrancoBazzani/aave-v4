@@ -157,7 +157,7 @@ This represents the principal liquidity provided by the Hub to the Spoke on the 
 
 Over time, the base debt accrues interest at the Hub’s base borrow rate strategy $R_{sbase,i}$. This means that as time progresses, the accrued base interest is added to the user’s base debt, increasing the amount the user owes to the protocol’s liquidity providers for that particular asset.
 
-$D_{u,i} = D_{u,ibase} + R_{sbase,i}D_{u,ibase}$
+$D_{u,ibase}(t) = D_{u,ibase} + tR_{sbase,i}D_{u,ibase}$
 
 $R_{sbase,i}D_{u,ibase} = ΔD_{u,ibase}$
 
@@ -169,7 +169,7 @@ $D_{u,premium}$ is a running total of the extra interest accrued on user u
 
 Unlike base debt, premium debt does not originate from an actual asset withdrawal from the Hub; instead, it is a bookkeeping entry that tracks how much extra the user owes because of the User Risk Premium.
 
-$D_{u,premium}= D_{u,premium} + R_{sbase,i}RP_uD_{u,ibase}$
+$D_{u,premium}(t) = D_{u,premium} + tR_{sbase,i}RP_uD_{u,ibase}$
 
 $R_{sbase,i}RP_uD_{u,ibase} = ΔD_{u,premium}$
 
